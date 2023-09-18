@@ -4,13 +4,14 @@ import datetime
 import geonamescache
 import openai
 from langchain.llms import OpenAI
-from langchain import PromptTemplate
+from langchain.chat_models import ChatOpenAI
+from langchain.schema import HumanMessage, SystemMessage, AIMessage
+import os
 
 
-openai.api_key = "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"
 
 st.set_page_config(layout="wide")
-
+openai.api_key = st.text_input('Streamlit Api Key')
 @st.cache_data
 def geo_data():
    #  geonames_df = pd.read_csv('cities15000.txt', sep='\t', header=None, names=['geonameid', 'name', 'asciiname', 'alternatenames', 'latitude', 'longitude', 'feature class', 'feature code', 'country code', 'cc2', 'admin1 code', 'admin2 code', 'admin3 code', 'admin4 code', 'population', 'elevation', 'dem', 'timezone', 'modification date'])
@@ -31,9 +32,13 @@ def geo_data():
     return city_to_country_dict2
 
 @st.cache_data
-def generate_response(input_text):
-  llm = OpenAI(temperature=0.7, openai_api_key=openai.api_key)
-  st.info(llm(input_text))
+def generate_response(sys_message, human_message):
+  chat = ChatOpenAI(temperature=0.8,openai_api_key=openai.api_key)
+  st.info(chat([
+    SystemMessage(content=sys_message),
+    HumanMessage(content=human_message)
+]
+))
 
 
 st.title('Welcome to your Travel Planning app!')
@@ -64,17 +69,22 @@ with col2:
             city = st.multiselect("Select the city you'd like to visit", options=list_cities,default=None)
 
 with st.sidebar:
-   filter_1 = st.slider('On a scale of 1 to 3, how much do you enjoy Outdoor Activities?', 1, 3,key='pref1')
-   filter_2 = st.slider('On a scale of 1 to 3, how much do you enjoy Socializing & Nightlife?', 1, 3,key='pref2')
-   filter_3 = st.slider('On a scale of 1 to 3, how much do you enjoy Arts & Culture?', 1, 3, key='pref3')
-   filter_4 = st.slider('On a scale of 1 to 3, how much do you enjoy Food?', 1, 3,key='pref4')
+   filter_1 = st.slider('On a scale of 0 to 5, how much do you enjoy Outdoor Activities?', 0, 5,key='pref1')
+   filter_2 = st.slider('On a scale of 0 to 5, how much do you enjoy Socializing & Nightlife?', 0, 5,key='pref2')
+   filter_3 = st.slider('On a scale of 0 to 5, how much do you enjoy Arts & Culture?', 0, 5, key='pref3')
+   filter_4 = st.slider('On a scale of 0 to 5, how much do you enjoy Food?', 0, 5,key='pref4')
+   filter_5 = st.slider('On a scale of 0 to 5, Pace of activities?', 0, 5,key='pref5')
 
 
 
 
-def generate_response(input_text):
-  llm = OpenAI(temperature=0.7, openai_api_key=openai.api_key,model='gpt-4')
-  st.info(llm(input_text))
+def generate_response(sys_message, human_message):
+  chat = ChatOpenAI(temperature=0.8,openai_api_key=openai.api_key)
+  st.info(chat([
+    SystemMessage(content=sys_message),
+    HumanMessage(content=human_message)
+]
+))
 
 # def get_text(input):
 #     completion = openai.ChatCompletion.create(
@@ -86,6 +96,12 @@ def generate_response(input_text):
     
 #     return completion.choices[0].message
 
+ref = {"Art and culture":filter_3,
+       "Food":filter_4,
+       "Socializing and nightlife":filter_2,
+       "Outdoor Activities":filter_1,
+       "Pace of activities": filter_5          
+}
 system_prompt = f"""
 You are a virtual travel planner, assisting users with their travel plans by providing information based on their inputs.
 Offer tailored recommendations based on the user's responses to help them have a memorable and enjoyable trip. Below is some more context on their responses.
@@ -101,6 +117,8 @@ Also make sure to include links if possible to the places that you recommend. e.
 """
 
 # prompt = PromptTemplate(template=system_prompt, input_variables=['start_date','end_date','country','city','filter_1','filter_2','filter_3','filter_4'])
-
-st.write(generate_response(system_prompt))
+sys_message = system_prompt
+# sys_message = "You are a travel advising AI bot that helps the user in planning itinerary for a user. the user will also provide their preferences for the following attributes {} with a score in the range 0-5. Where an attribute with a low score should be given a very low priotiy in the itinerary and  an attribute with a high value like 5 should be given high priority while planning the itinerary ".format(list(ref.keys()))
+human_message = "Hi Can you plan a travel for me to {},{} from {} to {} given the following qualities and their scores {}".format(city,country,start_date,end_date,ref)
+st.write(generate_response(sys_message,human_message))
 
