@@ -46,10 +46,10 @@ st.title('Welcome to your Travel Planning app!')
 col1, col2 = st.columns(2)
 
 
-'''
-using form so that changing a data point does not rerun
-the entire script 
-'''
+
+# using form so that changing a data point does not rerun
+# the entire script 
+
 
 preference_dict = {
    "filter_1":"Outdoor Activities",
@@ -82,16 +82,23 @@ with st.form("my_form"):
                list_cities = geo_data()
                list_cities = sorted(list_cities[country[0]])
                city = st.multiselect("Select the city you'd like to visit", options=list_cities,default=None)
-   filter_1 = st.checkbox('Outdoor Activities')
-   filter_2 = st.checkbox('Socializing & Nightlife')
-   filter_3 = st.checkbox('Arts & Culture')
-   filter_4 = st.checkbox('Food')
-   filter_5 = st.checkbox('Festivals and Events')
    preferences_list = []
-   for i in range(1,6):
-      if(eval("filter_"+str(i))):
-         preferences_list.append(preference_dict["filter_"+str(i)])
-
+   with st.expander("Select activities you are interested in"):
+      filter_1 = st.checkbox('Outdoor Activities')
+      filter_2 = st.checkbox('Socializing & Nightlife')
+      filter_3 = st.checkbox('Arts & Culture')
+      filter_4 = st.checkbox('Food')
+      filter_5 = st.checkbox('Festivals and Events')
+      
+      for i in range(1,6):
+         if(eval("filter_"+str(i))):
+            preferences_list.append(preference_dict["filter_"+str(i)])
+   who_filter = "Friends"
+   with st.expander("Who do you plan on travelling with"):
+      who_filter = st.radio(
+    "Who do you plan on travelling with",
+    ["Solo", "Family", "Couple","Friends"],label_visibility="hidden")
+      
    # filter_1 = st.slider('On a scale of 0 to 5, how much do you enjoy Outdoor Activities?', 0, 5,key='pref1')
    # filter_2 = st.slider('On a scale of 0 to 5, how much do you enjoy Socializing & Nightlife?', 0, 5,key='pref2')
    # filter_3 = st.slider('On a scale of 0 to 5, how much do you enjoy Arts & Culture?', 0, 5, key='pref3')
@@ -102,29 +109,23 @@ with st.form("my_form"):
 
 
 def generate_response(sys_message, human_message):
+  llm = OpenAI(temperature=0.8,openai_api_key=openai.api_key)
+  st.info(llm(sys_message))
+
   chat = ChatOpenAI(temperature=0.8,openai_api_key=openai.api_key)
   st.info(chat([
-    SystemMessage(content=sys_message),
-    HumanMessage(content=human_message)
+    SystemMessage(content=sys_message)
 ]
 ))
 
-# def get_text(input):
-#     completion = openai.ChatCompletion.create(
-#                     model="gpt-3.5-turbo",
-#                     messages=[
-#                     {"role": "system", "content": "You are a helpful assistant."},
-#                     {"role": "user", "content": input}]
-#                     )
-    
-#     return completion.choices[0].message
 
-ref = {"Art and culture":filter_3,
-       "Food":filter_4,
-       "Socializing and nightlife":filter_2,
-       "Outdoor Activities":filter_1,
-       "Pace of activities": filter_5          
-}
+
+# ref = {"Art and culture":filter_3,
+#        "Food":filter_4,
+#        "Socializing and nightlife":filter_2,
+#        "Outdoor Activities":filter_1,
+#        "Pace of activities": filter_5          
+# }
 
 
 if submit_button:
@@ -133,7 +134,8 @@ if submit_button:
    Offer tailored recommendations based on the user's responses to help them have a memorable and enjoyable trip. Below is some more context on their responses.
    1. You are planning a trip to {city}, {country} from {start_date} to {end_date}. 
    2. {preferences_list} is a list of preferences that a user wants to be included in their travel plan
-   3. Include the time duration range for each output on the intinerary, e.g e.g. if you recommend the  explore Louvre in Paris you should also give a time range like [30 minutes - 120 minutes ]
+   3. User will be travelling in a {who_filter} setting. So make sure you tailor your reccomendation based on this attribute.
+   4. Include the time duration range for each output on the intinerary, e.g e.g. if you recommend the  explore Louvre in Paris you should also give a time range like [30 minutes - 120 minutes ]
 
    Also make sure to include links if possible to the places that you recommend. e.g. if you recommend the Louvre in Paris, include a hyperlink to its website in your response.
    """
@@ -141,6 +143,6 @@ if submit_button:
    # prompt = PromptTemplate(template=system_prompt, input_variables=['start_date','end_date','country','city','filter_1','filter_2','filter_3','filter_4'])
    sys_message = system_prompt
    # sys_message = "You are a travel advising AI bot that helps the user in planning itinerary for a user. the user will also provide their preferences for the following attributes {} with a score in the range 0-5. Where an attribute with a low score should be given a very low priotiy in the itinerary and  an attribute with a high value like 5 should be given high priority while planning the itinerary ".format(list(ref.keys()))
-   human_message = "Hi Can you plan a travel for me to {},{} from {} to {} given the following qualities and their scores {}".format(city,country,start_date,end_date,ref)
+   human_message = "Hi Can you plan a travel for me to {},{} from {} to {} given the following qualities and their scores".format(city,country,start_date,end_date)
    st.write(generate_response(sys_message,human_message))
 
