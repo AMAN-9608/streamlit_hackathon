@@ -9,9 +9,9 @@ from langchain.schema import HumanMessage, SystemMessage, AIMessage
 import os
 
 
-
 st.set_page_config(layout="wide")
 openai.api_key = st.text_input('Streamlit Api Key')
+
 @st.cache_data
 def geo_data():
    #  geonames_df = pd.read_csv('cities15000.txt', sep='\t', header=None, names=['geonameid', 'name', 'asciiname', 'alternatenames', 'latitude', 'longitude', 'feature class', 'feature code', 'country code', 'cc2', 'admin1 code', 'admin2 code', 'admin3 code', 'admin4 code', 'population', 'elevation', 'dem', 'timezone', 'modification date'])
@@ -31,14 +31,13 @@ def geo_data():
 
     return city_to_country_dict2
 
-@st.cache_data
-def generate_response(sys_message, human_message):
-  chat = ChatOpenAI(temperature=0.8,openai_api_key=openai.api_key)
-  st.info(chat([
-    SystemMessage(content=sys_message),
-    HumanMessage(content=human_message)
-]
-))
+# @st.cache_data
+# def generate_response(sys_message, human_message):
+#   chat = ChatOpenAI(temperature=0.8,openai_api_key=openai.api_key)
+#   return chat([
+#     SystemMessage(content=sys_message),
+#     HumanMessage(content=human_message)
+#    ]).content
 
 
 st.title('Welcome to your Travel Planning app!')
@@ -59,6 +58,7 @@ preference_dict = {
    "filter_5":"Festivals and Events"
 
 }
+
 with st.form("my_form"):
    with col1:
       col3, col4 = st.columns(2)
@@ -82,7 +82,9 @@ with st.form("my_form"):
                list_cities = geo_data()
                list_cities = sorted(list_cities[country[0]])
                city = st.multiselect("Select the city you'd like to visit", options=list_cities,default=None)
+   
    preferences_list = []
+   
    with st.expander("Select activities you are interested in"):
       filter_1 = st.checkbox('Outdoor Activities')
       filter_2 = st.checkbox('Socializing & Nightlife')
@@ -109,17 +111,13 @@ with st.form("my_form"):
 
 
 def generate_response(sys_message, human_message):
-  llm = OpenAI(temperature=0.1,openai_api_key=openai.api_key)
-  response = llm(sys_message)
-  st.info(response)
-  return response
+#   llm = OpenAI(temperature=0.8,openai_api_key=openai.api_key)
+#   st.info(llm(sys_message))
 
-#   chat = ChatOpenAI(temperature=0.8,openai_api_key=openai.api_key)
-#   first_response = chat([
-#     SystemMessage(content=sys_message)
-# ]
-# )
-#   st.info(first_response)
+  chat = ChatOpenAI(temperature=0.2,openai_api_key=openai.api_key, model='gpt-4')
+  return chat([
+    SystemMessage(content=sys_message)
+      ]).content
 
 
 
@@ -130,17 +128,44 @@ def generate_response(sys_message, human_message):
 #        "Pace of activities": filter_5          
 # }
 
-
 if submit_button:
    system_prompt = f"""
    You are a virtual travel planner, assisting users with their travel plans by providing information based on their inputs.
    Offer tailored recommendations based on the user's responses to help them have a memorable and enjoyable trip. Below is some more context on their responses.
+   ###
+   Context:
    1. You are planning a trip to {city}, {country} from {start_date} to {end_date}. 
-   2. {preferences_list} is a list of preferences that a user wants to be included in their travel plan
-   3. User will be travelling in a {who_filter} setting. So make sure you tailor your reccomendation based on this attribute.
-   4. Include the time duration range for each output on the intinerary, e.g e.g. if you recommend the  explore Louvre in Paris you should also give a time range like [30 minutes - 120 minutes ]
+   2. {preferences_list} is a list of activities that a user wants to be included in their travel plan.
+      a. if the list contains 'Outdoor Activities', prioritise recommending outdoor activities like hiking etc.
+      b. if the list contains 'Socializing & Nightlife', prioritise recommending social activies and clubs, dancing etc.
+      c. if the list contains 'Arts & Culture', prioritise recommending museums, art galleries, etc.
+      d. if the list contains 'Food', prioritise recommending good restaurants.
+      e. if the list contains one or more of these activities, mix and match the recommendations.       
+   3. User will be travelling in a {who_filter} setting. So make sure you tailor your reccomendation based on this attribute, ie:
+      a. if the value is couple, prioritise recommending romantic things to do.
+      b. if the value is family, prioritise recommending more family oriented activities.
+      c. if the value is friends, prioritise recommending suited to a friend group.
+      d. if the value is solo, prioritise recommending good solo activities.
+   4. Include the time duration range for each output on the intinerary, e.g. if you recommend the explore Louvre in Paris you should also give a time range like [30 minutes - 120 minutes ]
+   ###
 
-   Also make sure to include links if possible to the places that you recommend. e.g. if you recommend the Louvre in Paris, include a hyperlink to its website in your response.
+   Recommend atleast three places to visit for each day.
+   Be sure to include web links to the places that you recommend. e.g. if you recommend the Louvre in Paris, include a hyperlink to its website in your response.
+   
+   ###
+   Format your response in the following format:
+   Day 1: 
+   <Recommendation 1>
+   .
+   .
+   Day 2:
+   <Recommendation 1>
+   .
+   .
+   and so on
+   ###
+
+   Your response:
    """
 
    # prompt = PromptTemplate(template=system_prompt, input_variables=['start_date','end_date','country','city','filter_1','filter_2','filter_3','filter_4'])
