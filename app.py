@@ -184,7 +184,7 @@ if submit_button:
    if you are not able to find an the value of a key the value should be None
    The returned dictionary should not have any text outside curly braces"""
    basic_information_response = generate_response(basic_sys_message,human_message)
-   st.write(basic_information_response)
+ 
    tab1, tab2, tab3,tab4 = st.tabs(["Basic Information", "Weather", "Safety Guidelines","Crime Stats"])
 
    with tab1:
