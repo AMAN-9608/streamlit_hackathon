@@ -172,5 +172,38 @@ if submit_button:
    sys_message = system_prompt
    # sys_message = "You are a travel advising AI bot that helps the user in planning itinerary for a user. the user will also provide their preferences for the following attributes {} with a score in the range 0-5. Where an attribute with a low score should be given a very low priotiy in the itinerary and  an attribute with a high value like 5 should be given high priority while planning the itinerary ".format(list(ref.keys()))
    human_message = "Hi Can you plan a travel for me to {},{} from {} to {} given the following qualities and their scores".format(city,country,start_date,end_date)
+   basic_sys_message = f"""
+   Can you find the the values of the following variables for {country}:
+   1.Currency
+   2.Capital
+   3.Electricity port type
+   4.Best form of transport
+   5.Time zone
+   Give me the output of this query as a python dictionary, the keys should be the variables 
+   as stated above and the values should be the response you come up with, 
+   if you are not able to find an the value of a key the value should be None
+   The returned dictionary should not have any text outside curly braces"""
+   basic_information_response = generate_response(basic_sys_message,human_message)
+ 
+   tab1, tab2, tab3,tab4 = st.tabs(["Basic Information", "Weather", "Safety Guidelines","Crime Stats"])
+
+   with tab1:
+      st.header("Basic Information")
+     
+      try:   
+         basic_info_dict = eval(basic_information_response)
+         print(basic_info_dict)
+         df_basic_info = pd.DataFrame(basic_info_dict,index = [0])
+         st.table(df_basic_info)
+      except:
+         st.write("No response")
+
+   with tab2:
+      st.header("Safety Guidelines")
+      st.image("https://static.streamlit.io/examples/dog.jpg", width=200)
+
+   with tab3:
+      st.header("Crime Stats")
+      st.image("https://static.streamlit.io/examples/owl.jpg", width=200)
    st.write(generate_response(sys_message,human_message))
 
