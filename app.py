@@ -190,13 +190,13 @@ if submit_button:
    with tab1:
       st.header("Basic Information")
      
-         
-      basic_info_dict = eval(basic_information_response)
-      print(basic_info_dict)
-      df_basic_info = pd.DataFrame(basic_info_dict,index = [0])
-      st.table(df_basic_info)
-      # except:
-      #    st.write("No response")
+      try:   
+         basic_info_dict = eval(basic_information_response)
+         print(basic_info_dict)
+         df_basic_info = pd.DataFrame(basic_info_dict,index = [0])
+         st.table(df_basic_info)
+      except:
+         st.write("No response")
 
    with tab2:
       st.header("Safety Guidelines")
