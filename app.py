@@ -92,8 +92,12 @@ with st.form("my_form"):
          start_date = st.date_input('Start date', value=today,min_value=today,max_value=today + datetime.timedelta(days=90))
       with col4:
          end_date = st.date_input('End date', value=tomorrow,min_value=tomorrow,max_value=start_date + datetime.timedelta(45))
+      
       if start_date>end_date:
          st.error('Error: End date must fall after start date.')
+      # start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
+      # end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
+      date_diff = (end_date-start_date).days
 
    with col2:
       col5, col6 = st.columns(2)
@@ -179,7 +183,7 @@ if submit_button:
    Recommend atleast three places to visit for each day.
    Be sure to include web links to the places that you recommend. e.g. if you recommend the Louvre in Paris, include a hyperlink to its website in your response.
    
-   Make sure you separate each day by a pipe delimeter i.e "|"
+   Make sure you separate each day by a pipe delimeter i.e "|" 
 
    ###
    Format your response in the following format:
@@ -231,13 +235,16 @@ if submit_button:
       # tmp = generate_response(sys_message,human_message)
       
       
-      try:   
+      try:  
          trip_response_list = trip_response.split("|")
+         if len(trip_response_list)!=date_diff+1:
+            trip_response_list = trip_response_list[:-1]
          for i in range(len(trip_response_list)):
             with st.expander("Day"+str(i+1)):
                st.write(trip_response_list[i])
 
-      except:
+      except Exception as e:
+         print(e)
          st.write("No response")
 
       
@@ -263,31 +270,40 @@ if submit_button:
    """
    
    #third llm call
-   safety_guidlines_response = generate_response(safety_guidlines,human_message)
-   safety_guidlines_response = safety_guidlines_response.split("\n")
    
-
-   
-
-   
+    
    with tab3:
       st.header("Safety Guidelines")
-      try:
-         for it in safety_guidlines_response:
-            st.markdown(it)
-         # something
-      except:
-         st.write("Nothing to show here")
+      with st.spinner('Fetching safety guidelines...'):
+         safety_guidlines_response = generate_response(safety_guidlines,human_message)
+         safety_guidlines_response = safety_guidlines_response.split("\n")
+         try:
+            for it in safety_guidlines_response:
+               st.markdown(it)
+            # something
+         except:
+            st.write("Nothing to show here")
 
+pdf_filename = "itinerary.pdf"
+create_pdf_with_formatted_text(pdf_filename, st.session_state['response'])
+with open("itinerary.pdf", "rb") as pdf_file:
+   PDFbyte = pdf_file.read()
 
+   st.download_button(label="Download PDF",
+                     data=PDFbyte,
+                     file_name="itinerary.pdf",
+                     mime='application/octet-stream')
    # st.write(trip_response)
-      
-with st.form('pdf'):
-      st.write("Click the button below to generate a shareable pdf of this itinerary!")
-      generate_button = st.form_submit_button('Generate PDF')
-      if generate_button:
-         pdf_filename = "itinerary.pdf"
-         create_pdf_with_formatted_text(pdf_filename, st.session_state['response'])
+# st.download_button(
+#    label="Download Itinerary as a PDF",
+#    data=st.session_state['response'],
+#    file_name='Itinerary.pdf',
+# )      
+# with st.form('pdf'):
+#       st.write("Click the button below to generate a shareable pdf of this itinerary!")
+#       generate_button = st.form_submit_button('Generate PDF')
+#       if generate_button:
+
       
 
 
