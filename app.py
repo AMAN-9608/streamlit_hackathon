@@ -6,6 +6,12 @@ import openai
 from langchain.llms import OpenAI
 from langchain.chat_models import ChatOpenAI
 from langchain.schema import HumanMessage, SystemMessage, AIMessage
+from reportlab.lib.pagesizes import letter
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
+from reportlab.platypus import PageBreak
+from io import BytesIO
 import os
 
 
@@ -31,14 +37,32 @@ def geo_data():
 
     return city_to_country_dict2
 
-# @st.cache_data
-# def generate_response(sys_message, human_message):
-#   chat = ChatOpenAI(temperature=0.8,openai_api_key=openai.api_key)
-#   return chat([
-#     SystemMessage(content=sys_message),
-#     HumanMessage(content=human_message)
-#    ]).content
+def create_pdf_with_formatted_text(pdf_filename, text_content):
+    pdf_buffer = BytesIO()
 
+    doc = SimpleDocTemplate(pdf_buffer, pagesize=letter)
+
+    elements = []
+
+    styles = getSampleStyleSheet()
+    style = styles["Normal"]
+    style.textColor = colors.black
+
+    paragraphs = text_content.split('\n')
+
+    for paragraph in paragraphs:
+        if paragraph.strip():  # Skip empty lines
+            elements.append(Paragraph(paragraph, style))
+            elements.append(Spacer(1, 12))  # Add some space between paragraphs
+
+    doc.build(elements)
+
+    with open(pdf_filename, 'wb') as f:
+        f.write(pdf_buffer.getvalue())
+
+
+if 'response' not in st.session_state:
+    st.session_state['response'] = 'No Itinerary Generated!'
 
 st.title('Welcome to your Travel Planning app!')
 
@@ -182,7 +206,8 @@ if submit_button:
    Give me the output of this query as a python dictionary, the keys should be the variables 
    as stated above and the values should be the response you come up with, 
    if you are not able to find an the value of a key the value should be None
-   The returned dictionary should not have any text outside curly braces"""
+   The returned dictionary should not have any text outside curly braces
+   """
    basic_information_response = generate_response(basic_sys_message,human_message)
  
    tab1, tab2, tab3,tab4 = st.tabs(["Basic Information", "Weather", "Safety Guidelines","Crime Stats"])
@@ -205,5 +230,17 @@ if submit_button:
    with tab3:
       st.header("Crime Stats")
       st.image("https://static.streamlit.io/examples/owl.jpg", width=200)
-   st.write(generate_response(sys_message,human_message))
+   
+   with st.spinner('Creating your itinerary...'):
+      tmp = generate_response(sys_message,human_message)
+      st.session_state['response'] = tmp
+      st.write(tmp)
+      
+with st.form('pdf'):
+   st.write("Click the button below to generate a shareable pdf of this itinerary!")
+   generate_button = st.form_submit_button('Generate PDF')
+   if generate_button:
+      pdf_filename = "sample.pdf"
+      create_pdf_with_formatted_text(pdf_filename, st.session_state['response'])
+
 
