@@ -64,7 +64,7 @@ def create_pdf_with_formatted_text(pdf_filename, text_content):
 if 'response' not in st.session_state:
     st.session_state['response'] = 'No Itinerary Generated!'
 
-st.title('Welcome to your Travel Planning app!')
+st.title('Welcome to TravelEase.ai!')
 
 col1, col2 = st.columns(2)
 
