@@ -6,6 +6,9 @@ __pycache__/
 # C extensions
 *.so
 
+# PDF files
+*.pdf
+
 # Distribution / packaging
 .Python
 build/
@@ -77,6 +80,8 @@ target/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+*/.ipynb_checkpoints/*
+*.ipynb
 
 # IPython
 profile_default/
