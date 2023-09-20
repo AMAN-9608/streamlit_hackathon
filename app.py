@@ -165,7 +165,7 @@ if submit_button:
    Offer tailored recommendations based on the user's responses to help them have a memorable and enjoyable trip. Below is some more context on their responses.
    ###
    Context:
-   1. You are planning a trip to {city}, {country} from {start_date} to {end_date}. 
+   1. You are planning a trip to {city}, {country} for {date_diff+1} days. 
    2. {preferences_list} is a list of activities that a user wants to be included in their travel plan.
       a. if the list contains 'Outdoor Activities', prioritise recommending outdoor activities like hiking etc.
       b. if the list contains 'Socializing & Nightlife', prioritise recommending social activies and clubs, dancing etc.
@@ -235,9 +235,10 @@ if submit_button:
       # tmp = generate_response(sys_message,human_message)
       
       
-      try:  
+      try:
+         pipe_count = trip_response.count('|')  
          trip_response_list = trip_response.split("|")
-         if len(trip_response_list)!=date_diff+1:
+         if(date_diff+1==pipe_count):
             trip_response_list = trip_response_list[:-1]
          for i in range(len(trip_response_list)):
             with st.expander("Day"+str(i+1)):
